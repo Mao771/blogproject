@@ -1,0 +1,44 @@
+{% extends "index.html" %}
+{% block main-content %}
+<main class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-3">{{ post.title }}</h1>
+            <p class="text-muted">Автор: {{ post.author }}</p>
+            <p class="text-break">{{ post.text }}</p>
+            {% if post.base64_image != None %}
+            <img src="data:image/png;base64,{{ post.base64_image }}"/>
+            {% endif %}
+            <p>
+                <strong>Likes:</strong> {{ post.like_count }}
+            <form method="POST" action="{% url 'like_post' post.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary btn-sm">Like</button>
+            </form>
+            </p>
+            <h2 class="h5 mt-4">Коментарі</h2>
+            <ul class="list-group mb-3">
+                {% for comment in comments %}
+                <li class="list-group-item">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        <h3 class="mb-0">{{ comment.author }}</h3>
+                        <div class="mb-1 text-body-secondary"> {{ comment.last_modified }}</div>
+                        <p class="text-break card-text mb-auto"> {{ comment.text }} </p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <form method="POST" action="{% url 'comment_post' post.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.non_field_errors }}
+                    <label for="{{ form.text.id_for_label }}">Коментар</label>
+                    {{ form.text }}
+                    {{ form.text.errors }}
+                </div>
+                <button type="submit" class="btn btn-primary">Додати коментар</button>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+{% block main-content %}
+    <div class="container d-flex min-vh-100 justify-content-center align-items-center">
+        <form class="card p-5" method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="mb-3">
+                {{ form.username.errors }}
+                <label for="{{ form.username.id_for_label }}">Логін</label>
+                {{ form.username }}
+            </div>
+            <div class="mb-3">
+                {{ form.password.errors }}
+                <label for="{{ form.password.id_for_label }}">Пароль</label>
+                {{ form.password }}
+            </div>
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <button class="btn btn-dark" type="submit">ВХІД</button>
+            <div style="text-align: center;"><a href="{% url 'register' %}">Немає акаунту, зареєеструватись</a></div>
+        </form>
+    </div>
+{% endblock main-content %}
