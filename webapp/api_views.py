@@ -1,3 +1,5 @@
+import os
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
@@ -16,11 +18,12 @@ from .events import SubscribeNotificationProducer
 from django.contrib.auth import authenticate, get_user_model, login
 from django.db.models import F, Prefetch
 from .models import BlogPost, PostComment
+from django.urls import reverse
+from .events import PostProducer
+from dotenv import load_dotenv
 
-
-
+load_dotenv()
 User = get_user_model()
-
 
 
 class BlogPostPagination(CursorPagination):
@@ -72,6 +75,16 @@ class BlogPostViewSet(viewsets.ModelViewSet):
     queryset = BlogPost.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = BlogPostPagination
+
+    def create(self, request, *args, **kwargs):
+        response: Response = super().create(request, *args, **kwargs)
+
+        post_producer = PostProducer()
+        post_uri = os.environ['FRONTEND_URL'] + '/posts/' + str(response.data['id'])
+        post_producer.send_event(request.user, response.data['id'], post_uri)
+        post_producer.close()
+
+        return response
 
     def get_permissions(self):
         if self.action == "list" or self.action == "retrieve":

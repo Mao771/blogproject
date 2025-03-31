@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  db:
+    env_file: "webapp.env"
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: myproject
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+
+  recommender:
+    build: ./recommender
+    ports:
+      - "8001:8001"
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./recommender:/app
+    env_file:
+      - .env
+
+  notification:
+    build: ./notification
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./notification:/app
+    env_file:
+      - .env
+    command: python worker.py  # adjust for your consumer
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"     # for services
+      - "15672:15672"   # optional: management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      - backend
+      - recommender
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro

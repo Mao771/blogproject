@@ -114,10 +114,11 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'silk',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     "ALGORITHM": "RS256",
     "SIGNING_KEY": open(Path(BASE_DIR / "blogproject/keys/private_key.pem")).read(),
@@ -130,9 +131,9 @@ SIMPLE_JWT = {
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
+        "NAME": config("POSTGRES_DB"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT")
     }
@@ -147,7 +148,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 REST_KNOX = {
-    'TOKEN_TTL': timedelta(minutes=30)
+    'TOKEN_TTL': timedelta(minutes=5)
 }
 STATIC_ROOT = 'webapp/static/'
 SILKY_PYTHON_PROFILER = True
@@ -158,6 +159,9 @@ CORS_ALLOWED_ORIGINS = [
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": f"redis://{config('REDIS_HOST')}:6379",
     }
 }
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True

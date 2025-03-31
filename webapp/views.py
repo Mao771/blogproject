@@ -24,7 +24,6 @@ def index_view(request):
     if not request.user:
         user = authenticate(request, username=config("USER"), password=config("PASS"))
         login(request, user)
-    print(request.user)
 
     all_posts = BlogPost.objects.all()
 

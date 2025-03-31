@@ -11,6 +11,17 @@
             <a class="btn btn-primary btn-lg" href="{% url "create" %}" role="button">Створити допис</a>
         </div>
     </div>
+    <div class="container">
+        <div class="nav-scroller py-1 mb-3 border-bottom">
+            <nav class="nav nav-underline justify-content-center">
+                <a id="nav-link-all-posts" class="nav-item nav-link link-body-emphasis active" href="#">Всі
+                    дописи</a>
+                {% if user.is_authenticated %}
+                <a id="nav-link-my-posts" class="nav-item nav-link link-body-emphasis" href="#">Рекомендації</a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
     <div class="row mb-2">
         {% for post in blog_posts %}
             <div class="col-md-6">
