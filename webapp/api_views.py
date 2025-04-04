@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.utils.decorators import method_decorator
@@ -15,15 +16,16 @@ from silk.profiling.profiler import silk_profile
 from .serializers import (BlogPostSerializer, PostCommentSerializer,
                           UserSerializer)
 from .events import SubscribeNotificationProducer
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import get_user_model
 from django.db.models import F, Prefetch
 from .models import BlogPost, PostComment
-from django.urls import reverse
-from .events import PostProducer
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 User = get_user_model()
+
+logger = logging.getLogger("webapp")
 
 
 class BlogPostPagination(CursorPagination):
@@ -35,6 +37,12 @@ class AuthorPagination(CursorPagination):
 
 class LoginView(KnoxLoginView):
     authentication_classes = [BasicAuthentication]
+
+
+class IsAuthor(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return obj.author == request.user
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -73,23 +81,14 @@ class BlogPostViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     serializer_class = BlogPostSerializer
     queryset = BlogPost.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAuthor]
     pagination_class = BlogPostPagination
 
-    def create(self, request, *args, **kwargs):
-        response: Response = super().create(request, *args, **kwargs)
-
-        post_producer = PostProducer()
-        post_uri = os.environ['FRONTEND_URL'] + '/posts/' + str(response.data['id'])
-        post_producer.send_event(request.user, response.data['id'], post_uri)
-        post_producer.close()
-
-        return response
 
     def get_permissions(self):
-        if self.action == "list" or self.action == "retrieve":
+        if self.action in ("list", "retrieve", "picture"):
             return []
-        return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAuthor()]
 
     @method_decorator(cache_page(60 * 15, key_prefix='blogpost'))
     @method_decorator(vary_on_headers("Authorization"))
@@ -99,17 +98,28 @@ class BlogPostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         username = self.request.query_params.get("username")
+        queryset = BlogPost.objects.all()
+
         if username:
-            self.queryset = self.queryset.filter(author__username=username)
-        queryset = self.queryset.prefetch_related(
+            queryset = queryset.filter(author__username=username)
+
+        return queryset.prefetch_related(
             Prefetch(
                 "postcomment_set", queryset=PostComment.objects.select_related("author")
             )
         ).all()
 
-        return queryset
+    @action(
+        detail=True
+    )
+    def picture(self, request, pk):
+        post: BlogPost = self.get_object()
+
+        return Response(base64.b64encode(post.post_picture).decode("utf-8"))
 
 
 class PostCommentViewSet(viewsets.ModelViewSet):
     queryset = PostComment.objects.all()
     serializer_class = PostCommentSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]

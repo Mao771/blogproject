@@ -26,7 +26,7 @@ SECRET_KEY = config("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.107']
 
 MIDDLEWARE = [
     'silk.middleware.SilkyMiddleware',
@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
     'webapp',
     'rest_framework',
     'knox',
@@ -145,7 +146,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 10
 }
 REST_KNOX = {
     'TOKEN_TTL': timedelta(minutes=5)
@@ -153,15 +154,20 @@ REST_KNOX = {
 STATIC_ROOT = 'webapp/static/'
 SILKY_PYTHON_PROFILER = True
 CORS_ALLOWED_ORIGINS = [
-    '*'
+    'http://127.0.0.1:5173',
+    'http://192.168.0.107:5173'
 ]
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{config('REDIS_HOST')}:6379",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{config('REDIS_HOST')}:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        }
     }
 }
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
+CORS_ORIGIN_ALLOW_ALL = True

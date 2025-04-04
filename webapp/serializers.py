@@ -1,8 +1,11 @@
 from rest_framework import serializers
-from django.urls import reverse
+import os
+import logging
 
 from .models import BlogPost, PostComment, User
 from .events import PostProducer
+
+logger = logging.getLogger("webapp")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,21 +28,26 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PostCommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(required=False, many=False, read_only=True)
+
     class Meta:
         model = PostComment
         fields = '__all__'
         extra_kwargs = {'author': {'read_only': True}}
 
-    def create(self, validated_data):
-        validated_data['author'] = self.context['request'].user
-        return super().create(validated_data)
+    def validate(self, attrs):
+        author = self.context['request'].user
+        attrs['author'] = author
+
+        return super().validate(attrs)
 
 
 
 class BlogPostSerializer(serializers.ModelSerializer):
     comments = PostCommentSerializer(required=False, many=True, source="postcomment_set", read_only=True)
     post_picture = serializers.FileField(write_only=True)
-    post_picture_url = serializers.SerializerMethodField(read_only=True)
+    post_picture_url = serializers.HyperlinkedIdentityField(view_name="posts-picture")
+    author = UserSerializer(required=False, many=False, read_only=True)
 
 
     class Meta:
@@ -47,19 +55,9 @@ class BlogPostSerializer(serializers.ModelSerializer):
         fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_picture', 'post_picture_url']
         extra_kwargs = {'author': {'read_only': True}}
 
-    def update(self, instance, validated_data):
-        post_picture = validated_data.pop('post_picture')
-        validated_data['post_picture'] = post_picture.read()
-        return super().update(instance, validated_data)
-
-    def create(self, validated_data):
+    def validate(self, attrs):
         author = self.context['request'].user
-        post_picture = validated_data.pop('post_picture')
-        validated_data['post_picture'] = post_picture.read()
-        validated_data['author'] = author
-        instance = super().create(validated_data)
+        attrs['post_picture'] = attrs['post_picture'].read()
+        attrs['author'] = author
 
-        return instance
-
-    def get_post_picture_url(self, obj):
-        return None
+        return super().validate(attrs)

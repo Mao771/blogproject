@@ -15,8 +15,7 @@ from pika.compat import url_unquote
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('webapp')
 
 
 class EventProducer(ABC):
@@ -100,7 +99,7 @@ class PostProducer(EventProducer):
 
         self.check_connection_and_channel()
 
-        logger.info("Sending event upon post creation")
+        logger.info("Sending event upon post creation %s" % post_id)
         self.channel.basic_publish(
             exchange=os.environ["EVENT_EXCHANGE"],
             routing_key=os.environ["ROUTING_KEY_MODERATION"],
