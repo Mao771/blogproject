@@ -1,5 +1,3 @@
-import base64
-
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.test import APITestCase, force_authenticate
@@ -7,7 +5,7 @@ from unittest.mock import patch
 
 
 from webapp.models import BlogPost
-from webapp.views import BlogPostViewSet
+from webapp.api_views import BlogPostViewSet
 
 User = get_user_model()
 
@@ -24,6 +22,10 @@ class BlogPostTestCase(APITestCase):
         self.post = BlogPost.objects.create(
             title="Мені 13й минало", text="Мені 13й минало", author=self.user
         )
+        self.token_data = {
+            'username': self.username,
+            'password': self.password
+        }
 
     @patch("pika.BlockingConnection", autospec=True)
     def test_blog_post_create_returns_201(self, pika_connection):
@@ -66,30 +68,18 @@ class BlogPostTestCase(APITestCase):
         assert response.status_code == 401, "Status code must be 401"
 
     def test_token_get_returns_200(self):
-        auth_headers = {
-            "HTTP_AUTHORIZATION": "Basic "
-            + base64.b64encode(
-                f"{self.username}:{self.password}".encode("utf-8")
-            ).decode(),
-        }
-        response = self.client.post("/api/login/", **auth_headers)
+        response = self.client.post("/api/token/", data=self.token_data)
 
         assert response.status_code == 200, "Response code must be 200"
-        assert "token" in response.data, "Token must be in response"
+        assert "access" in response.data, "Token must be in response"
 
     def test_blog_post_obtain_returns_200(self):
-        auth_headers = {
-            "HTTP_AUTHORIZATION": "Basic "
-            + base64.b64encode(
-                f"{self.username}:{self.password}".encode("utf-8")
-            ).decode(),
-        }
-        response = self.client.post("/api/login/", **auth_headers)
-        token = response.data["token"]
+        response = self.client.post("/api/token/", data=self.token_data)
+        token = response.data["access"]
 
         test_post_id = self.post.id
         response = self.client.get(
-            f"/api/posts/{test_post_id}/", headers={"Authorization": f"Token {token}"}
+            f"/api/posts/{test_post_id}/", headers={"Authorization": f"Bearer {token}"}
         )
 
         assert response.status_code == 200, "Response status code must be 200"
