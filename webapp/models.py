@@ -11,6 +11,7 @@ class BlogPost(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
     post_picture = models.BinaryField('Зображення допису', null=True)
+    post_image = models.ImageField('Зображення допису', null=True, blank=True, upload_to='blog_images/')
 
 
 class PostComment(models.Model):

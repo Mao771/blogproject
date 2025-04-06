@@ -37,7 +37,7 @@
                     </div>
                     <div class="col-auto d-none d-lg-block">
                         {% if post.base64_image != None %}
-                            <img src="data:image/png;base64,{{ post.base64_image }}" width="200" height="250">
+                            <img src="{{ post.post_image.url }}" alt="Post Image" width="200" height="250">
                         {% else %}
                             <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg"
                                  role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice"

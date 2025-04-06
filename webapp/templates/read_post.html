@@ -7,7 +7,7 @@
             <p class="text-muted">Автор: {{ post.author }}</p>
             <p class="text-break">{{ post.text }}</p>
             {% if post.base64_image != None %}
-            <img src="data:image/png;base64,{{ post.base64_image }}"/>
+            <img src="{{ post.post_image.url }}" alt="Post Image">
             {% endif %}
             <p>
                 <strong>Likes:</strong> {{ post.like_count }}

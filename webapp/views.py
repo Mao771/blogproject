@@ -27,13 +27,6 @@ def index_view(request):
 
     all_posts = BlogPost.objects.all()
 
-    for b_post in all_posts:
-        b_post.base64_image = (
-            base64.b64encode(b_post.post_picture).decode("utf-8")
-            if b_post.post_picture is not None
-            else None
-        )
-
     return render(request, "blog.html", {"blog_posts": all_posts})
 
 
@@ -46,9 +39,9 @@ def create_post(request):
                 title=request.POST["title"],
                 text=request.POST["text"],
                 author=request.user,
-                post_picture=(
-                    request.FILES["post_picture"].read()
-                    if "post_picture" in request.FILES
+                post_image=(
+                    request.FILES["post_image"]
+                    if "post_image" in request.FILES
                     else None
                 ),
             )
@@ -64,11 +57,6 @@ def create_post(request):
 
 def display_post(request, post_id):
     post = get_object_or_404(BlogPost, pk=post_id)
-    post.base64_image = (
-        base64.b64encode(post.post_picture).decode("utf-8")
-        if post.post_picture is not None
-        else None
-    )
     form = BlogPostCreateForm()
     if isinstance(post, BlogPost):
         comments = PostComment.objects.filter(post=post)
@@ -83,11 +71,6 @@ def display_post(request, post_id):
 @login_required
 def comment_post(request, post_id):
     post = get_object_or_404(BlogPost, pk=post_id)
-    post.base64_image = (
-        base64.b64encode(post.post_picture).decode("utf-8")
-        if post.post_picture is not None
-        else None
-    )
     if isinstance(post, BlogPost):
         comments = PostComment.objects.filter(post=post)
     else:
@@ -114,11 +97,6 @@ def like_post(request, post_id):
     )  # атомарна операція
     form = BlogPostCommentForm()
     post = get_object_or_404(BlogPost, pk=post_id)
-    post.base64_image = (
-        base64.b64encode(post.post_picture).decode("utf-8")
-        if post.post_picture is not None
-        else None
-    )
     if isinstance(post, BlogPost):
         comments = PostComment.objects.filter(post=post)
     else:

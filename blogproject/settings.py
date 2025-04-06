@@ -155,6 +155,7 @@ STATIC_ROOT = 'webapp/static/'
 SILKY_PYTHON_PROFILER = True
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5173',
+    'http://localhost:5173',
     'http://192.168.0.107:5173'
 ]
 
@@ -171,3 +172,7 @@ CACHES = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 CORS_ORIGIN_ALLOW_ALL = True
+
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

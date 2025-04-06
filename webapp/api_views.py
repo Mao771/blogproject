@@ -97,11 +97,11 @@ class BlogPostViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        username = self.request.query_params.get("username")
+        author_id = self.request.query_params.get("author_id")
         queryset = BlogPost.objects.all()
 
-        if username:
-            queryset = queryset.filter(author__username=username)
+        if author_id:
+            queryset = queryset.filter(author__id=author_id)
 
         return queryset.prefetch_related(
             Prefetch(

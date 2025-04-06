@@ -45,19 +45,17 @@ class PostCommentSerializer(serializers.ModelSerializer):
 
 class BlogPostSerializer(serializers.ModelSerializer):
     comments = PostCommentSerializer(required=False, many=True, source="postcomment_set", read_only=True)
-    post_picture = serializers.FileField(write_only=True, required=False)
-    post_picture_url = serializers.HyperlinkedIdentityField(view_name="posts-picture")
     author = UserSerializer(required=False, many=False, read_only=True)
+    post_picture_url = serializers.HyperlinkedIdentityField(view_name="posts-picture")
 
 
     class Meta:
         model = BlogPost
-        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_picture', 'post_picture_url']
+        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_image', 'post_picture_url']
         extra_kwargs = {'author': {'read_only': True}}
 
     def validate(self, attrs):
         author = self.context['request'].user
-        attrs['post_picture'] = attrs['post_picture'].read() if 'post_picture' in attrs and attrs['post_picture'] else None
         attrs['author'] = author
 
         return super().validate(attrs)
