@@ -1,10 +1,8 @@
 import logging
-import os
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
-from knox.auth import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import permissions, status, viewsets
@@ -21,6 +19,7 @@ from django.db.models import F, Prefetch
 from .models import BlogPost, PostComment
 from dotenv import load_dotenv
 import base64
+from django.db import transaction
 
 load_dotenv()
 User = get_user_model()
@@ -29,7 +28,7 @@ logger = logging.getLogger("webapp")
 
 
 class BlogPostPagination(CursorPagination):
-    ordering = 'last_modified'
+    ordering = '-last_modified'
 
 class AuthorPagination(CursorPagination):
     ordering = 'date_joined'
@@ -88,6 +87,9 @@ class BlogPostViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve", "picture"):
             return []
+        elif self.action == 'like':
+            return [permissions.IsAuthenticated()]
+
         return [permissions.IsAuthenticated(), IsAuthor()]
 
     @method_decorator(cache_page(60 * 15, key_prefix='blogpost'))
@@ -98,7 +100,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         author_id = self.request.query_params.get("author_id")
-        queryset = BlogPost.objects.all()
+        queryset = BlogPost.objects
 
         if author_id:
             queryset = queryset.filter(author__id=author_id)
@@ -106,7 +108,8 @@ class BlogPostViewSet(viewsets.ModelViewSet):
         return queryset.prefetch_related(
             Prefetch(
                 "postcomment_set", queryset=PostComment.objects.select_related("author")
-            )
+            ),
+            'likes'
         ).all()
 
     @action(
@@ -116,6 +119,27 @@ class BlogPostViewSet(viewsets.ModelViewSet):
         post: BlogPost = self.get_object()
 
         return Response(base64.b64encode(post.post_picture).decode("utf-8"))
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, pk=None):
+        with transaction.atomic():
+            post = self.get_object()
+            user = request.user
+
+            if post.likes.filter(id=user.id).exists():
+                post.likes.remove(user)
+                BlogPost.objects.filter(pk=post.pk).update(like_count=F('like_count') - 1)
+                liked = False
+            else:
+                post.likes.add(user)
+                BlogPost.objects.filter(pk=post.pk).update(like_count=F('like_count') + 1)
+                liked = True
+
+        post.refresh_from_db(fields=['like_count'])
+        return Response({
+            'liked': liked,
+            'like_count': post.like_count,
+        }, status=status.HTTP_200_OK)
 
 
 class PostCommentViewSet(viewsets.ModelViewSet):

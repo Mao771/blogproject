@@ -51,7 +51,7 @@ class BlogPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BlogPost
-        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_image', 'post_picture_url']
+        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_image', 'post_picture_url', 'likes']
         extra_kwargs = {'author': {'read_only': True}}
 
     def validate(self, attrs):

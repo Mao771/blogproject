@@ -12,6 +12,7 @@ class BlogPost(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     post_picture = models.BinaryField('Зображення допису', null=True)
     post_image = models.ImageField('Зображення допису', null=True, blank=True, upload_to='blog_images/')
+    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
 
 
 class PostComment(models.Model):
