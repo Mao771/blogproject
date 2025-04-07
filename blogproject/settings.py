@@ -119,11 +119,12 @@ INSTALLED_APPS = [
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # інвалідуємо токен кожні 5 хвилин
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # refresh токен живе день
     "ALGORITHM": "RS256",
     "SIGNING_KEY": open(Path(BASE_DIR / "blogproject/keys/private_key.pem")).read(),
     "VERIFYING_KEY": open(Path(BASE_DIR / "blogproject/keys/public_key.pem")).read(),
+    "TOKEN_OBTAIN_SERIALIZER": "webapp.serializers.MyTokenObtainPairSerializer",
 }
 
 # Database

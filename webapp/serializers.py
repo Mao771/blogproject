@@ -1,9 +1,8 @@
 from rest_framework import serializers
-import os
 import logging
 
 from .models import BlogPost, PostComment, User
-from .events import PostProducer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 logger = logging.getLogger("webapp")
 
@@ -59,3 +58,11 @@ class BlogPostSerializer(serializers.ModelSerializer):
         attrs['author'] = author
 
         return super().validate(attrs)
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['username'] = user.username
+        return token
