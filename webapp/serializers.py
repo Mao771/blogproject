@@ -45,12 +45,11 @@ class PostCommentSerializer(serializers.ModelSerializer):
 class BlogPostSerializer(serializers.ModelSerializer):
     comments = PostCommentSerializer(required=False, many=True, source="postcomment_set", read_only=True)
     author = UserSerializer(required=False, many=False, read_only=True)
-    post_picture_url = serializers.HyperlinkedIdentityField(view_name="posts-picture")
 
 
     class Meta:
         model = BlogPost
-        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_image', 'post_picture_url', 'likes']
+        fields = ['id', 'author', 'title', 'text', 'comments', 'last_modified', 'post_image', 'likes']
         extra_kwargs = {'author': {'read_only': True}}
 
     def validate(self, attrs):

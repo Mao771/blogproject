@@ -112,13 +112,6 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             'likes'
         ).all()
 
-    @action(
-        detail=True
-    )
-    def picture(self, request, pk):
-        post: BlogPost = self.get_object()
-
-        return Response(base64.b64encode(post.post_picture).decode("utf-8"))
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
