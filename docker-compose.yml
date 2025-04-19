@@ -41,13 +41,13 @@ services:
       - ./notification:/app
     env_file:
       - .env
-    command: python worker.py  # adjust for your consumer
+    command: python worker.py
 
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"     # for services
-      - "15672:15672"   # optional: management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
